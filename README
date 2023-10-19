@@ -1,5 +1,6 @@
 DinaFiles is a file manager inside your browser and was developed as an extension for Dina Browser https://github.com/iontelos/Dina.
-It is a simple graphical wrapper to launch and stop filebrowser.   
+It is a simple graphical wrapper to launch and stop filebrowser. 
+filebrowser runs on localhost, port 7001.
 A function in the script is dedicated to downloading and installing the filebrowser executable. It's a modified and simplified version of the official filebrowser installation script provided by filebrowser.org
 The installation of Dina is suggested but not required to use DinaFiles. You can use the option --browser foo to launch the app in the browser of your choice. The option --fullscreen launches dinafiles in Dina browser in fullscreen.
 Dina Browser is a minimal browser built with tauri and Pake and uses the WebKit rendering engine.  

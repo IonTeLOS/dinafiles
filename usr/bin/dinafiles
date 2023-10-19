@@ -1,0 +1,199 @@
+#! /bin/bash
+## /usr/bin/dinafiles
+
+## Copyright: 2023, Ion@TeLOS
+## License: GPL-3.0+
+
+# DinaFiles is a file manager inside your browser and was developed as an extension for Dina Browser https://github.com/iontelos/Dina.
+# It is a simple graphical wrapper to launch and stop filebrowser.   
+# A function in the script is dedicated to downloading and installing the filebrowser executable. It's a modified and simplified version of the official filebrowser installation script provided by filebrowser.org
+# The installation of Dina is suggested but not required to use DinaFiles. You can use the option --browser foo to launch the app in the browser of your choice. The option --fullscreen launches dinafiles in Dina browser in fullscreen.
+# Dina Browser is a minimal browser built with tauri and Pake and uses the WebKit rendering engine.  
+# filebrowser https://github.com/filebrowser/filebrowser and Pake https://github.com/tw93/Pake are credited external projects with their own licenses.
+# The custom.css file is credited external work by Richard Asplin (https://github.com/richneptune)
+# Icons used are material icons by Google 
+# The source and package of DinaFiles https://github.com/IonTeLOS/dinafiles and Dina Browser are maintained by Ion@TeLOS <teloslinux@protonmail.com>.  
+ 
+arg=$1
+fb=$HOME/.local/bin/filebrowser
+YAD=/usr/bin/yad
+DINA=/usr/bin/dina
+
+if [[ "$ARGUMENT" == "help" ]] || [[ "$ARGUMENT" == "--help" ]] || [[ "$ARGUMENT" == "-h" ]]
+then
+echo""
+echo "~~DinaFiles - a file manager in your web browser~~"
+echo "         by Ion@TeLOS <teloslinux@protonmail.com> powered by filebrowser"
+echo "-------------------------------------------------------------------"
+echo "available arguments:"
+echo ""
+echo "main use:	dinafiles OR dinafiles --fullscreen"
+echo "--stop > quits DinaFiles"
+echo "--fullscreen > opens DinaFiles in Dina Browser in fullscreen" 
+echo "--browser firefox > launches DinaFiles in the browser of your choice which is provided as second argument"
+exit
+fi
+
+install_filemanager()
+{
+	mkdir -p $HOME/.local/bin
+	install_path="$HOME/.local/bin"
+	filemanager_bin="filebrowser"
+	filemanager_dl_ext=".tar.gz"
+	filemanager_os="linux"
+	filemanager_arch="amd64"
+
+	########################
+	# Download and extract #
+	########################
+
+	echo "	downloading filebrowser.."
+	if type -p curl >/dev/null 2>&1; then
+		net_getter="curl -fsSL"
+	elif type -p wget >/dev/null 2>&1; then
+		net_getter="wget -qO-"
+	else
+		echo "	Aborted, could not find curl or wget"
+		return 7
+	fi
+	
+	filemanager_file="${filemanager_os}-$filemanager_arch-filebrowser$filemanager_dl_ext"
+	filemanager_tag="$(${net_getter}  https://api.github.com/repos/filebrowser/filebrowser/releases/latest | grep -o '"tag_name": ".*"' | sed 's/"//g' | sed 's/tag_name: //g')"
+	filemanager_url="https://github.com/filebrowser/filebrowser/releases/download/$filemanager_tag/$filemanager_file"
+	echo "$filemanager_url"
+	
+	rm -rf "/tmp/$filemanager_file"
+
+	${net_getter} "$filemanager_url" > "/tmp/$filemanager_file"
+
+	echo "	Extracting..."
+	case "$filemanager_file" in
+		*.zip)    unzip -o "/tmp/$filemanager_file" "$filemanager_bin" -d "$PREFIX/tmp/" ;;
+		*.tar.gz) tar -xzf "/tmp/$filemanager_file" -C "$PREFIX/tmp/" "$filemanager_bin" ;;
+	esac
+	chmod +x "/tmp/$filemanager_bin"
+
+	echo "	Putting filemanager in $install_path"
+	mv "/tmp/$filemanager_bin" "$install_path/$filemanager_bin"
+	rm -- "/tmp/$filemanager_file"
+
+	if type -p $filemanager_bin >/dev/null 2>&1; then
+		echo "	Successfully installed"
+		filebrowser config init
+		notify-send -a DinaFiles -i dinafiles "DinaFiles is now fully installed" "Enjoy!" &
+	else
+		echo "	Something went wrong, filebrowser is not in your path"
+	fi
+}
+
+if [[ -f "$fb" ]] 
+then
+    "	filebrowser executable is installed"
+else
+    echo "	downloading additional content, please wait.."
+    notify-send -a DinaFiles -i dinafiles "Please wait" "Getting required additional content.." &
+    install_filemanager
+fi
+
+if [[ $arg = stop ]] || [[ $arg = --stop ]]
+then
+if test -f "$YAD"; then
+echo "	yad is installed, continuing.."
+else
+echo "	yad is not installed, exiting.."
+notify-send -a DinaFiles -i dinafiles "Install yad to use this feature" &
+exit
+fi
+if ! pgrep -f "$fb"
+then   
+echo "	DinaFiles is not running, nothing to do..";
+notify-send -a DinaFiles -i dinafiles "DinaFiles is not running, nothing to do.." &
+exit  
+else   
+yad --window-icon=dina-browser --center --on-top --title="Stop DinaFiles" --image=dinafiles --borders=10 --timeout=15 --timeout-indicator="bottom" --text="\n\t<b>Are you sure you want to quit DinaFiles? \n\nClick Cancel if you are now running commands in DinaFiles</b>" --width 400;result=$?;echo $result &
+fi
+if [[ $result -eq 0 ]]
+then
+pkill -f $fb &&
+cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+echo "	DinaFiles stopped, bye!"
+exit
+else
+echo "	You canceled quitting"
+exit
+fi
+fi
+
+if [[ $arg == --browser ]] && [[ $2 != "" ]]
+then 
+bro=$2
+echo "	you chose to launch DinaFiles in $2 browser.." &
+elif test -f "$DINA"; 
+then
+echo "	Dina Browser is installed and will be used to launch DinaFiles.." &
+bro=/usr/bin/dina-browser-direct
+else
+echo "	Dina Browser https://github.com/iontelos/Dina is not installed, the default browser will be used.." &
+bro=xdg-open
+fi
+
+if (ps aux | grep filebrowser | grep -v grep > /dev/null)
+then
+	echo "	DinaFiles is already running, opening in browser.."
+	if [[ $bro == /usr/bin/dina-browser-direct ]] && [[ $arg == --fullscreen ]]
+	then
+	$bro http://127.0.0.1:7001 --fullscreen &
+    sleep 5 &&
+	cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+	exit
+	elif [[ $bro != /usr/bin/dina-browser-direct ]] && [[ $arg == --fullscreen ]]
+    then
+    echo "	Dina Browser is not installed, launching in default browser.."
+    notify-send -a DinaFiles -i dinafiles "Dina Browser is not installed" "Launching in default browser.." &
+    $fb config set --branding.name "DinaFiles" --auth.method=noauth --branding.files "/etc/dinafiles-branding" -p 7001 &&
+	$fb -r $HOME &
+    sleep 1 &&
+    $bro http://127.0.0.1:7001 &
+    sleep 3 &&
+    cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+    exit
+	else 
+	$bro http://127.0.0.1:7001 &
+	sleep 5 &&
+	cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+	exit
+	fi
+else
+	echo "	launching DinaFiles and opening the browser.."
+	if [[ $bro == /usr/bin/dina-browser-direct ]] && [[ $arg == --fullscreen ]]
+	then
+	$fb config set --branding.name "DinaFiles" --auth.method=noauth --branding.files "/etc/dinafiles-branding" -p 7001 &&
+	$fb -r $HOME &
+    sleep 1 &&
+    $bro http://127.0.0.1:7001 --fullscreen &
+    sleep 3 &&
+    cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+    exit
+    elif [[ $bro != /usr/bin/dina-browser-direct ]] && [[ $arg == --fullscreen ]]
+    then
+    echo "	Dina Browser is not installed, launching in default browser.."
+    notify-send -a DinaFiles -i dinafiles "Dina Browser is not installed" "Launching in default browser.." &
+    $fb config set --branding.name "DinaFiles" --auth.method=noauth --branding.files "/etc/dinafiles-branding" -p 7001 &&
+	$fb -r $HOME &
+    sleep 1 &&
+    $bro http://127.0.0.1:7001 &
+    sleep 3 &&
+    cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+    exit
+    else
+    $fb config set --branding.name "DinaFiles" --auth.method=noauth --branding.files "/etc/dinafiles-branding" -p 7001 &&
+	$fb -r $HOME &
+    sleep 1 &&
+    $bro http://127.0.0.1:7001 &
+    sleep 3 &&
+    cp /usr/bin/templates/index-backup.html /usr/bin/templates/index.html &
+    exit
+    fi
+fi
+
+exit

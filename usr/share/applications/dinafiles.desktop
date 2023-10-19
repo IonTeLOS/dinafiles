@@ -1,0 +1,31 @@
+[Desktop Entry]
+Comment=In-brwser File Manager
+Exec=/usr/bin/dinafiles
+GenericName[en_US]=File Manager
+GenericName=File Manager
+Icon=dinafiles
+Name[en_US]=DinaFiles
+Name=DinaFiles
+Path=
+StartupNotify=true
+StartupWMClass=dinafiles
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+Categories=System;
+Keywords=inode;files;folders;
+Actions=stop;fullscreen;
+
+[Desktop Action stop]
+Name=Quit
+Icon=dinafiles-stop
+Exec=/usr/bin/dinafiles --stop
+
+[Desktop Action fullscreen]
+Name=Open in fullscreen
+Icon=dinafiles-fullscreen
+Exec=/usr/bin/dinafiles --fullscreen

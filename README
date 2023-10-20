@@ -8,4 +8,12 @@ filebrowser https://github.com/filebrowser/filebrowser and Pake https://github.c
 The custom.css file is credited external work by Richard Asplin (https://github.com/richneptune)
 Icons used are material icons by Google 
 A .deb package is included in the Releases
+
+To add the repository and install DinaFiles :
+wget -qO - https://iontelos.github.io/appy/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/appy.gpg
+sudo curl -s --compressed -o /etc/apt/sources.list.d/telos.list "https://iontelos.github.io/appy/telos.list"
+sudo apt clean
+sudo apt update
+sudo apt install dinafiles
+
 DinaFiles and Dina run on Linux._

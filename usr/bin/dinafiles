@@ -88,7 +88,7 @@ install_filemanager()
 
 if [[ -f "$fb" ]] 
 then
-    "	filebrowser executable is installed"
+    echo "	filebrowser executable is installed"
 else
     echo "	downloading additional content, please wait.."
     notify-send -a DinaFiles -i dinafiles "Please wait" "Getting required additional content.." &
